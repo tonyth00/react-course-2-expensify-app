@@ -9,7 +9,7 @@ module.exports = env => {
     mode: 'development',
     entry: './src/app.js',
     output: {
-      path: path.join(__dirname, 'public'),
+      path: path.join(__dirname, 'public', 'dist'),
       filename: 'bundle.js',
     },
     module: {
@@ -49,6 +49,7 @@ module.exports = env => {
       contentBase: path.join(__dirname, 'public'),
       open: true, //open browser
       historyApiFallback: true, // tell webpack-dev-server to handle routing via client side code
+      publicPath: '/dist/',
     },
   };
 };
