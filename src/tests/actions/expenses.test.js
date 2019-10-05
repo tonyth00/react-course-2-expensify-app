@@ -7,6 +7,7 @@ import {
   startAddExpense,
   setExpenses,
   startSetExpenses,
+  startRemoveExpense,
 } from '../../actions/expenses';
 import database from '../../firebase/firebase';
 import expenses from '../fixtures/expenses';
@@ -29,6 +30,24 @@ test('should setup remove expensive action object', () => {
   expect(action).toEqual({
     type: 'REMOVE_EXPENSE',
     id: '123abc',
+  });
+});
+
+test('should remove expense from firebase', done => {
+  const store = createMockStore({});
+  const id = expenses[2].id;
+
+  store.dispatch(startRemoveExpense({ id })).then(() => {
+    const actions = store.getActions();
+    expect(actions[0]).toEqual({
+      type: 'REMOVE_EXPENSE',
+      id,
+    });
+
+    return database.ref(`expenses/${id}`).once('value');
+  }).then(snapshot => {
+    expect(snapshot.val()).toBeFalsy(); // null is considered falsy
+    done();
   });
 });
 
@@ -127,7 +146,7 @@ test('should fetch the expenses from firebase', done => {
     const actions = store.getActions();
     expect(actions[0]).toEqual({
       type: 'SET_EXPENSES',
-      expenses //same as seed data in beforeEach clause
+      expenses, //same as seed data in beforeEach clause
     });
     done();
   });
