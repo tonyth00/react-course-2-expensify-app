@@ -8,10 +8,12 @@ import {
   setExpenses,
   startSetExpenses,
   startRemoveExpense,
+  startEditExpense,
 } from '../../actions/expenses';
 import database from '../../firebase/firebase';
 import expenses from '../fixtures/expenses';
 
+// inject fixture expenses data into test database
 beforeEach(done => {
   const expensesData = {};
   expenses.forEach(({ id, description, note, amount, createdAt }) => {
@@ -37,18 +39,21 @@ test('should remove expense from firebase', done => {
   const store = createMockStore({});
   const id = expenses[2].id;
 
-  store.dispatch(startRemoveExpense({ id })).then(() => {
-    const actions = store.getActions();
-    expect(actions[0]).toEqual({
-      type: 'REMOVE_EXPENSE',
-      id,
-    });
+  store
+    .dispatch(startRemoveExpense({ id }))
+    .then(() => {
+      const actions = store.getActions();
+      expect(actions[0]).toEqual({
+        type: 'REMOVE_EXPENSE',
+        id,
+      });
 
-    return database.ref(`expenses/${id}`).once('value');
-  }).then(snapshot => {
-    expect(snapshot.val()).toBeFalsy(); // null is considered falsy
-    done();
-  });
+      return database.ref(`expenses/${id}`).once('value');
+    })
+    .then(snapshot => {
+      expect(snapshot.val()).toBeFalsy(); // null is considered falsy
+      done();
+    });
 });
 
 test('should setup edit expense action object', () => {
@@ -60,6 +65,29 @@ test('should setup edit expense action object', () => {
       note: 'New note value',
     },
   });
+});
+
+test('should edit expense from firebase', done => {
+  const store = createMockStore({});
+  const id = expenses[0].id;
+  const updates = { amount: 21045 };
+
+  store
+    .dispatch(startEditExpense(id, updates))
+    .then(() => {
+      const actions = store.getActions();
+      expect(actions[0]).toEqual({
+        type: 'EDIT_EXPENSE',
+        id,
+        updates,
+      });
+
+      return database.ref(`expenses/${id}`).once('value');
+    })
+    .then(snapshot => {
+      expect(snapshot.val().amount).toEqual(updates.amount);
+      done();
+    });
 });
 
 test('should setup add expense action object with provided values', () => {
